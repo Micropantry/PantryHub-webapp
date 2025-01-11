@@ -1,5 +1,55 @@
 ## Little Pantry
-You need to install web vitals to run react app. Open your terminal and run the following command:
+Project Description
+
+
+---
+
+## **Table of Contents**
+
+1. [Getting Started](#getting-started)
+2. [Prerequisites](#prerequisites)
+3. [Installation](#installation)
+4. [Running the App](#running-the-app)
+
+---
+
+## **Getting Started**
+
+These instructions will help you get a copy of the project up and running on your local machine for development and testing purposes.
+
+---
+
+## **Prerequisites**
+
+Make sure you have the following installed on your machine:
+
+- **Node.js** (>= 14.x recommended)
+- **npm** (Node Package Manager)
+- A GitHub account and access to the project repository
+
+---
+
+## **Installation**
+
+1. **Clone the repository**:
+```bash
+   git clone https://github.com/nancyluoy/LittlePantry.git
+```
+
+2. **Install Dependencies Using npm**:
+```bash
+   npm install
+```
+
+---
+
+## **Running the App**
+**Run the App Using npm**:
+```bash
+   npm start
+```
+
+<!-- 
 
 `npm i web-vitals --save-dev`
 
@@ -72,4 +122,4 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 
 ### `npm run build` fails to minify
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify) -->
