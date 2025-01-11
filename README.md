@@ -1,5 +1,7 @@
 ## Little Pantry
+You need to install web vitals to run react app. Open your terminal and run the following command:
 
+`npm i web-vitals --save-dev`
 
 # Getting Started with Create React App
 
