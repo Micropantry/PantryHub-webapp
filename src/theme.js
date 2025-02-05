@@ -1,4 +1,4 @@
-import { extendTheme } from "@chakra-ui/react";
+import { background, extendTheme } from "@chakra-ui/react";
 
 const theme = extendTheme({
   fonts: {
@@ -24,6 +24,10 @@ const theme = extendTheme({
         500: "#3B3D3E", // Primary text color
     },
     primary: "#009C1F",
+    darkgreen: "#345E3D",
+    babyblue: "#A9BDEC",
+    lightgreen: "#B7DF8F",
+    background:"#F6F6F6"
   }
 });
 

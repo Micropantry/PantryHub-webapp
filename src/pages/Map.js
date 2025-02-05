@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { getDistance } from 'geolib';
 
 import {
   Box,
@@ -21,14 +23,20 @@ import { IoArrowBackOutline,IoNavigate } from "react-icons/io5";
 import { IoMdAdd } from "react-icons/io";
 import { FiThumbsUp } from "react-icons/fi";
 import { BiSolidFridge } from "react-icons/bi";
-import { FaUser } from "react-icons/fa";
+import { FaUser,FaBook } from "react-icons/fa";
 import { useJsApiLoader, GoogleMap, Marker} from '@react-google-maps/api'
 import { doc, updateDoc, collection, getDocs, getDoc } from 'firebase/firestore';
 import db from '../firebaseConfig'; // Ensure the path to your Firebase config is correct
 import AddItemDialog from '../components/AddItemDialog';
 
 
-
+function calculateDistance(lat1, lng1, lat2, lng2) {
+  const distance = getDistance(
+    { latitude: lat1, longitude: lng1 },
+    { latitude: lat2, longitude: lng2 }
+  );
+  return (distance / 1609.34).toFixed(1);  // Converts meters to miles
+}
 
 
 const lat_shift = 0.005
@@ -58,17 +66,42 @@ const defaultCenter = { lat: 47.621484340052824, lng: -122.1766799767942 - lat_s
     const fetchLocations = async () => {
       try {
         const querySnapshot = await getDocs(collection(db, 'locations'));
-        const fetchedLocations = querySnapshot.docs.map((doc) => ({
-          key: doc.id,
-          ...doc.data(),
-          location: {
-            lat: doc.data().location.latitude,
-            lng: doc.data().location.longitude,
+        const fetchedLocations = querySnapshot.docs.map((doc) => {
+          const currentStock = doc.data().currentStock; // Assuming currentStock is part of the document data
+
+          // Determine stock level based on currentStock value
+          let stockLevel = "Low Stock";
+          if (currentStock >= 10 && currentStock < 20) {
+            stockLevel = "Medium Stock";
+          } else if (currentStock >= 20) {
+            stockLevel = "Full Stock";
+          }
+          // Calculate distance from defaultCenter
+          const distance = calculateDistance(
+            defaultCenter.lat, defaultCenter.lng,
+            doc.data().location.latitude, doc.data().location.longitude
+          );
+
+          return {
+            key: doc.id,
+            ...doc.data(),
+            stockLevel,
+            location: {
+              lat: doc.data().location.latitude,
+              lng: doc.data().location.longitude,
           },
-        }));
-        setLocations(fetchedLocations);
-        setFilteredLocations(fetchedLocations); // Initialize filtered list
-     
+            distance,
+          
+          };
+        });
+
+        // Sort locations by distance (ascending)
+        const sortedLocations = fetchedLocations.sort(
+          (a, b) => parseFloat(a.distance) - parseFloat(b.distance)
+        );
+
+        setLocations(sortedLocations);
+        setFilteredLocations(sortedLocations); // Initialize filtered list
       } catch (error) {
         console.error('Error fetching locations:', error);
       }
@@ -130,15 +163,15 @@ const defaultCenter = { lat: 47.621484340052824, lng: -122.1766799767942 - lat_s
       );
     }
 
-    // if (filters.stockLevel) {
-    //   updatedLocations = updatedLocations.filter((location) => {
-    //     if (filters.stockLevel === "low") return location.stockLevel < 20;
-    //     if (filters.stockLevel === "medium")
-    //       return location.stockLevel >= 20 && location.stockLevel < 50;
-    //     if (filters.stockLevel === "high") return location.stockLevel >= 50;
-    //     return true;
-    //   });
-    // }
+    if (filters.stockLevel) {
+      updatedLocations = updatedLocations.filter((location) => {
+        if (filters.stockLevel === "low") return location.currentStock < 10;
+        if (filters.stockLevel === "medium")
+          return location.stockLevel >= 10 && location.currentStock < 20;
+        if (filters.stockLevel === "high") return location.currentStock >= 20;
+        return true;
+      });
+    }
 
     // if (filters.lastRestockTime) {
     //   updatedLocations = updatedLocations.filter((location) => {
@@ -242,7 +275,7 @@ const defaultCenter = { lat: 47.621484340052824, lng: -122.1766799767942 - lat_s
         left="4"
         mt="2"
         h="90%"
-        w="410px"
+        w="440px"
         pb="2"
         overflow='hidden'
         borderRadius="24"
@@ -251,6 +284,7 @@ const defaultCenter = { lat: 47.621484340052824, lng: -122.1766799767942 - lat_s
         shadow="md"
         zIndex="modal"
       >
+
         {selectedLocation ? (
           <>
             <Box position="relative">
@@ -352,17 +386,14 @@ const defaultCenter = { lat: 47.621484340052824, lng: -122.1766799767942 - lat_s
                   <Text fontSize="md" fontWeight="medium">
                     Stock level
                   </Text>
-                  <Text fontSize="sm" color="text.400">
-                    ? Items
-                  </Text>
-                </Box>
-                <Divider orientation='vertical' boarderColor="#E4EBE4" height="50px"/>
-                <Box align="left" width="40%">
-                  <Text fontSize="md" fontWeight="medium">
-                    Current traffic
-                  </Text>
-                  <Text fontSize="sm" color="text.400">
-                    Light
+                  <Text fontSize="sm" color={
+                          selectedLocation.stockLevel === "Full"
+                            ? "green.500"
+                            : selectedLocation.stockLevel === "Medium"
+                            ? "orange.500"
+                            : "red.500"
+                        }>
+                    {selectedLocation.currentStock} Items
                   </Text>
                 </Box>
               </HStack>
@@ -423,7 +454,7 @@ const defaultCenter = { lat: 47.621484340052824, lng: -122.1766799767942 - lat_s
                       ))}
                     </Flex>
                   ) : (
-                    <Text>Loading wishlist...</Text>
+                    <Text fontSize="sm" color="text.300">Nothing in wishlist yet...</Text>
                   )}
                 </Box>
                 
@@ -433,7 +464,7 @@ const defaultCenter = { lat: 47.621484340052824, lng: -122.1766799767942 - lat_s
                     Support us
                   </Text>
                   <Text fontSize="sm" color="text.300">
-                    Every contribution makes a differnece
+                    Every contribution makes a difference!
                   </Text>
                   <HStack mt="2" alignItems="stretch" h="auto" justify= "space-between">
                     <Flex px="2" py="5" alignItems="center" borderRadius="8" bg="#f5f5f5">
@@ -455,6 +486,10 @@ const defaultCenter = { lat: 47.621484340052824, lng: -122.1766799767942 - lat_s
                       </Link>
                     </Flex>
                   </HStack>
+
+                  <Link href="" mt="2" display="flex" alignItems="center" isExternal>
+                    <Text  fontSize="sm" color="primary" > Safety Guidelines </Text>
+                  </Link>
                 </Box>
               </VStack>
 
@@ -499,6 +534,7 @@ const defaultCenter = { lat: 47.621484340052824, lng: -122.1766799767942 - lat_s
                 >
                   <option value="basic">Basic</option>
                   <option value="fridge">Fridge</option>
+                  <option value="business">Business</option>
                 </Select>
                 <Select
                   placeholder="Stock Level"
@@ -513,7 +549,7 @@ const defaultCenter = { lat: 47.621484340052824, lng: -122.1766799767942 - lat_s
                   <option value="medium">Medium</option>
                   <option value="high">High</option>
                 </Select>
-                <Select
+                {/* <Select
                   placeholder="Last Restock"
                   size='sm'
                   w="fit-content"
@@ -528,7 +564,7 @@ const defaultCenter = { lat: 47.621484340052824, lng: -122.1766799767942 - lat_s
                   <option value="today">Today</option>
                   <option value="thisWeek">This Week</option>
                   <option value="older">Older</option>
-                </Select>
+                </Select> */}
               </HStack>
 
 
@@ -548,21 +584,55 @@ const defaultCenter = { lat: 47.621484340052824, lng: -122.1766799767942 - lat_s
                     setSelectedMarkerKey(location.key); // Highlight the corresponding marker
                   }}
                 >
-                  <HStack spacing="4" align="center">
-                    <VStack align="center" spacing="1"  w="8">
+                  <Flex align="center" justify="space-between"gap="4">
+                    {/* <VStack align="center" spacing="1"  flex="1">
                       <Image
                         src={`/icons/${location.type}-icon.svg`} // Dynamic file path
                         alt={`${location.type} icon`}
                         boxSize="22px" // Adjust size as needed
                         objectFit="contain"
                       />
-                      <Text fontSize="xs" color="text.300" textTransform="capitalize">{location.type}</Text>
+                      <Text fontSize="xs" color="text.300">{location.distance} mi</Text>
+                    </VStack> */}
+                    <VStack align="center" spacing="1"  flex="1">
+                      <Image
+                          src={location.image} // Dynamic file path
+                          boxSize="50px" // Adjust size as needed
+                          objectFit="cover"
+                          borderRadius='lg'
+                        />
+
+                      <Text fontSize="xs" color="text.300">{location.distance} mi</Text>
+                      
                     </VStack>
-                    <Box>
-                      <Text fontSize="lg" fontWeight="semibold">{location.name}</Text>
+                    <Box flex="5">
+                        <Text fontSize="lg" fontWeight="semibold">{location.name}</Text>
                       <Text fontSize="sm" color="text.500">{location.address}</Text>
+                      <Flex gap='1' align="center">
+                        <Flex gap='1' align="center">
+                          <Image
+                            src={`/icons/${location.type}-icon.svg`} // Dynamic file path
+                            alt={`${location.type} icon`}
+                            boxSize="14px" // Adjust size as needed
+                            objectFit="contain"
+                          />
+                          <Text fontSize="xs" color="text.300">{location.type}</Text>
+                        </Flex>
+                        ·
+                        <Text 
+                          fontSize="xs"
+                          color={
+                            location.stockLevel === "Full Stock"
+                              ? "green.500"
+                              : location.stockLevel === "Medium Stock"
+                              ? "orange.500"
+                              : "red.500"
+                          }
+                        >{location.stockLevel}</Text>
+                      </Flex>
+                      
                     </Box>
-                  </HStack>
+                  </Flex>
                 </Box>
               ))}
               
