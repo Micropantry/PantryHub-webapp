@@ -49,6 +49,11 @@ Make sure you have the following installed on your machine:
    npm start
 ```
 
+---
+
+## **Resource**
+- **Icons:**
+https://react-icons.github.io/react-icons/
 <!-- 
 
 `npm i web-vitals --save-dev`
