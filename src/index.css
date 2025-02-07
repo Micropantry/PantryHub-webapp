@@ -19,3 +19,8 @@ code {
   color: white;
   padding: 10px;
 }
+
+.nav-active {
+  font-weight: bold;
+  text-decoration: underline;
+}

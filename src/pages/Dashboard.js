@@ -4,7 +4,12 @@ import mqtt from 'mqtt';
 import axios from 'axios';
 import { format } from 'date-fns';
 import Papa from 'papaparse';
+import { Line } from 'react-chartjs-2';
+import { Chart, registerables } from 'chart.js';
+import 'chartjs-adapter-date-fns';
 
+
+Chart.register(...registerables);
 
 const Dashboard = () => {
 //   const [weightData, setWeightData] = useState(['Loading...']);
@@ -231,6 +236,7 @@ const Dashboard = () => {
             return { text: "Full Stock", color: "green.500" };
         }
     };
+ 
   
   return (
     <Box px="8" py="4"  maxW="1600px" mx="auto" bg="background">
@@ -257,7 +263,7 @@ const Dashboard = () => {
         <Text> latest door1 data: {door1Data[0]?.value}</Text>
         <Text> latest door2 data: {door2Data[0]?.value}</Text> */}
 
-        <VStack spacing="2" background="white" borderWidth={"1px"} borderColor="grey.500" borderRadius="3xl" px="4" py="4" gap="2" align="start">
+        <VStack spacing="2" background="white" borderWidth={"1px"} borderColor="grey.500" borderRadius="3xl" px="4" py="4" gap="2" align="start" h="900px" overflowY="auto" >
             <Text fontSize="lg" fontWeight="bold"> Visitor Activity Log</Text>
             {intervals.map((interval, index) => (
                 <HStack key={index} justify="space-between" w="100%">

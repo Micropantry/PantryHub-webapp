@@ -3,13 +3,9 @@ import axios from 'axios';
 import { getDistance } from 'geolib';
 
 import {
-  Box,
-  Button,
-  ButtonGroup,
-  Flex,
-  HStack,
-  IconButton,
-  Icon,
+  Box, Button, ButtonGroup,
+  Flex, HStack,
+  IconButton, Icon,
   Input,
   Link,
   Image,
@@ -17,16 +13,17 @@ import {
   Select,
   VStack,
   Divider,
+  useDisclosure, Modal, ModalOverlay, ModalContent, ModalBody
 } from '@chakra-ui/react'
 
 import { IoArrowBackOutline,IoNavigate } from "react-icons/io5";
 import { IoMdAdd } from "react-icons/io";
-import { FiThumbsUp } from "react-icons/fi";
+import { FiThumbsUp, FiZoomIn } from "react-icons/fi";
 import { BiSolidFridge } from "react-icons/bi";
 import { FaUser,FaBook } from "react-icons/fa";
 import { useJsApiLoader, GoogleMap, Marker} from '@react-google-maps/api'
 import { doc, updateDoc, collection, getDocs, getDoc } from 'firebase/firestore';
-import db from '../firebaseConfig'; // Ensure the path to your Firebase config is correct
+import {db} from '../firebaseConfig'; // Ensure the path to your Firebase config is correct
 import AddItemDialog from '../components/AddItemDialog';
 
 
@@ -37,6 +34,19 @@ function calculateDistance(lat1, lng1, lat2, lng2) {
   );
   return (distance / 1609.34).toFixed(1);  // Converts meters to miles
 }
+
+function getIconUrl(locationType, isSelected) {
+  let filename;
+  if (locationType === "Shared Pantry") {
+      filename = isSelected ? 'pantry-pin-selected.svg' : 'pantry-pin-default.svg';
+  } else if (locationType === "Shared Fridge") {
+      filename = isSelected ? 'fridge-pin-selected.svg' : 'fridge-pin-default.svg';
+  } else if (locationType === "Business Partner") {
+      filename = isSelected ? 'business-pin-selected.svg' : 'business-pin-default.svg';
+  }
+  return `/icons/${filename}`;
+}
+
 
 
 const lat_shift = 0.005
@@ -60,6 +70,7 @@ const defaultCenter = { lat: 47.621484340052824, lng: -122.1766799767942 - lat_s
       lastRestockTime: "",
     });
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const { isOpen, onOpen, onClose } = useDisclosure();
 
 
     // Fetch all locations from Firestore on component load
@@ -230,7 +241,8 @@ const defaultCenter = { lat: 47.621484340052824, lng: -122.1766799767942 - lat_s
 
 
   return (
-    <Box flex="1" position="relative" h="100%">
+    <Box flex="1" position="relative" h="100vh">
+      
       {/* Google Map */}
       <Box position="absolute" left={0} top={0} h="100%" w="100%">
         <GoogleMap
@@ -247,7 +259,7 @@ const defaultCenter = { lat: 47.621484340052824, lng: -122.1766799767942 - lat_s
             mapId: "1ffb6a8e6175ac3",
           }}
         >
-          {locations.map((location) => (
+          {/* {locations.map((location) => (
             <Marker
               key={location.key}
               position={location.location}
@@ -262,6 +274,23 @@ const defaultCenter = { lat: 47.621484340052824, lng: -122.1766799767942 - lat_s
                 setSelectedMarkerKey(location.key);
                 // setSelectedLocation(location);
                 // fetchLocations();
+                fetchAndSetSelectedLocation(location);
+              }}
+            />
+          ))} */}
+          {locations.map((location) => (
+            <Marker
+              key={location.key}
+              position={location.location}
+              icon={{
+                url: getIconUrl(location.type, location.key === selectedMarkerKey),
+                scaledSize: new window.google.maps.Size(
+                  location.key === selectedMarkerKey ? 60 : 45,
+                  location.key === selectedMarkerKey ? 60 : 45
+                ),
+              }}
+              onClick={() => {
+                setSelectedMarkerKey(location.key);
                 fetchAndSetSelectedLocation(location);
               }}
             />
@@ -313,24 +342,9 @@ const defaultCenter = { lat: 47.621484340052824, lng: -122.1766799767942 - lat_s
                 bg="rgba(59,61,62,0.5)"
                 color='white'
                 borderRadius={16}
-                icon={<IoArrowBackOutline />}
+                icon={<Icon as={IoArrowBackOutline} boxSize="5" />}
+                size='lg'
               />
-
-              <HStack 
-                position="absolute" 
-                bottom="4" 
-                left="4" 
-                px="2"
-                py="1"
-                spacing="1"
-                bg="rgba(255,255,255,0.8)"
-                color='primary'
-                borderRadius={12}
-                zIndex="dropdown">
-                  {/* <BiSolidFridge /> */}
-                  <Image src={`/icons/${selectedLocation.type}-icon.svg`}/>
-                  <Text fontSize="md" fontWeight="medium" textTransform="capitalize">{selectedLocation.type}</Text>
-              </HStack>
             </Box>
 
             {/* Text content with padding */}
@@ -376,30 +390,125 @@ const defaultCenter = { lat: 47.621484340052824, lng: -122.1766799767942 - lat_s
                   <Text color="text.400" fontSize="sm" fontWeight="medium">{selectedLocation.operator} ({selectedLocation.contact})</Text>
                   {/* <Text> {selectedLocation.contact}(</Text> */}
                 </HStack>
+
+                <Box my="4" >
+                <Flex justifyContent="space-between" p="3" align='center' direction="row" borderTop={'1px #E4EBE4 solid'} borderBottom={'1px #E4EBE4 solid'}>
+                  <Box>
+                    <Text fontSize="sm" fontWeight="medium" color="text.400"> Type </Text>
+                    <HStack mt="1" spacing="1" align='center'>
+                      <Image 
+                          src={
+                              selectedLocation.type === "Shared Pantry" ? "/icons/pantry-icon.svg" :
+                              selectedLocation.type === "Shared Fridge" ? "/icons/fridge-icon.svg" :
+                              selectedLocation.type === "Business Partner" ? "/icons/business-icon.svg" :
+                              "/icons/pantry-icon.svg"  // Fallback icon in case of an unexpected type
+                          }
+                          boxSize={"18px"}
+                      />
+                      <Text fontSize="sm" fontWeight="medium"
+                            color={
+                              selectedLocation.type === "Business Partner"
+                                ? "#F7A016" //orange
+                                : selectedLocation.type === "Shared Fridge"
+                                ? "#63BB2E" //green
+                                : "#4E7BFE" //blue
+                            }>
+                              {selectedLocation.type}
+                          </Text>
+                    </HStack>
+                  </Box>
+                  <Divider orientation='vertical' borderColor="#E4EBE4"  borderWidth="1px" h="10"/>
+                  <Box>
+                    <Text fontSize="sm" fontWeight="medium" color="text.400"> Hours </Text>
+                    <Text mt="1" color="green" fontWeight="medium" fontSize={"sm"}> Open 24/7</Text>
+                  </Box>
+                  <Divider orientation='vertical' borderColor="#E4EBE4"  borderWidth="1px" h="10"/>
+                  <Box>
+                    <Text fontSize="sm" fontWeight="medium" color="text.400"> Current Stock </Text>
+                    <Text mt="1" fontSize="sm" fontWeight="medium" color={
+                            selectedLocation.stockLevel === "Full"
+                              ? "green.500"
+                              : selectedLocation.stockLevel === "Medium"
+                              ? "orange.500"
+                              : "red.500"
+                          }>
+                      {selectedLocation.currentStock} Items
+                    </Text>
+                  </Box>
+                </Flex>
               </Box>
 
-              <Divider boarderColor="#E4EBE4" borderWidth="4px"/>
-
-              {/* Stock level & Traffic */}
-              <HStack px="6" py="3" justifyContent={'space-between'}>
-                <Box align="left" width="40%">
-                  <Text fontSize="md" fontWeight="medium">
-                    Stock level
-                  </Text>
-                  <Text fontSize="sm" color={
-                          selectedLocation.stockLevel === "Full"
-                            ? "green.500"
-                            : selectedLocation.stockLevel === "Medium"
-                            ? "orange.500"
-                            : "red.500"
-                        }>
-                    {selectedLocation.currentStock} Items
-                  </Text>
+              {selectedLocation && selectedLocation.inventoryImage ? (
+                  <HStack px="3" py="3" mb="2" justifyContent={'space-between'} h="150px"align='center' bg="background" borderRadius="8">
+                    <VStack align="left" h="100%" justifyContent={'space-between'} flex="2">
+                      <Text fontSize="sm" fontWeight="medium" color="text.400">
+                        Inventory Update
+                      </Text>
+                      <VStack spacing="1" align={"left"}>
+                        <Text fontSize="sm" fontWeight={"medium"} color="text">
+                          "{selectedLocation.inventoryImage.message}"
+                        </Text>
+                        <Text fontSize="xs" color="text.400">
+                          {selectedLocation.inventoryImage.time.toDate().toLocaleString()}
+                        </Text>
+                      </VStack>
+                    </VStack>
+                  {/* <Image
+                      src={selectedLocation.inventoryImage.imageURL}
+                      h="100%"
+                      borderRadius={"8"}
+                      objectFit="cover"
+                      flex="1"
+                      onClick={onOpen} // Making the image clickable to open the modal
+                  /> */}
+                  <Box position="relative" flex="1" height="100%">
+                    <Image
+                        src={selectedLocation.inventoryImage.imageURL}
+                        h="100%"
+                        w="100%"
+                        borderRadius="8"
+                        objectFit="cover"
+                        cursor="pointer" // Changes cursor to pointer on hover
+                        onClick={onOpen}
+                    />
+                    <Icon
+                        as={FiZoomIn}
+                        position="absolute"
+                        right="5px"
+                        bottom="5px"
+                        color="white"
+                        w={6}
+                        h={6}
+                        onClick={onOpen}
+                        cursor="pointer" // Ensure the icon also shows a pointer cursor
+                    />
                 </Box>
-              </HStack>
+
+                  {/* Modal to display enlarged image */}
+                  <Modal isOpen={isOpen} onClose={onClose} size="xl">
+                      <ModalOverlay />
+                      <ModalContent>
+                          <ModalBody>
+                              <Image
+                                  src={selectedLocation.inventoryImage.imageURL}
+                                  maxW="100%"
+                                  maxH="100%"
+                                  borderRadius="8"
+                              />
+                          </ModalBody>
+                      </ModalContent>
+                  </Modal>
+                </HStack>
+              ) : (
+                <div></div>
+              )}
+                
+              </Box>
 
 
-              <Divider boarderColor="#E4EBE4" borderWidth="4px"/>
+
+
+              <Divider borderWidth="4px"/>
 
               {/* Pantry Wishlist */}
               <VStack px="6" py="3" spacing="3">
@@ -493,7 +602,7 @@ const defaultCenter = { lat: 47.621484340052824, lng: -122.1766799767942 - lat_s
                 </Box>
               </VStack>
 
-              <Divider boarderColor="#E4EBE4" borderWidth="4px"/>
+              <Divider borderWidth="4px"/>
 
               {/* Messages */}
               <VStack  px="6" py="3" spacing="2" align="start">
@@ -524,7 +633,7 @@ const defaultCenter = { lat: 47.621484340052824, lng: -122.1766799767942 - lat_s
               {/* Filter Controls */}
               <HStack pl="5" spacing="1" mt="4">
                 <Select
-                  placeholder="Type"
+                  placeholder="All Type"
                   size='sm'
                   w="fit-content"
                   borderRadius={8}
@@ -532,9 +641,9 @@ const defaultCenter = { lat: 47.621484340052824, lng: -122.1766799767942 - lat_s
                     setFilters((prev) => ({ ...prev, type: e.target.value }))
                   }
                 >
-                  <option value="basic">Basic</option>
-                  <option value="fridge">Fridge</option>
-                  <option value="business">Business</option>
+                  <option value="Shared Pantry">Shared Pantry</option>
+                  <option value="Shared Fridge">Shared Fridge</option>
+                  <option value="Business Partner">Business Partner</option>
                 </Select>
                 <Select
                   placeholder="Stock Level"
@@ -610,13 +719,27 @@ const defaultCenter = { lat: 47.621484340052824, lng: -122.1766799767942 - lat_s
                       <Text fontSize="sm" color="text.500">{location.address}</Text>
                       <Flex gap='1' align="center">
                         <Flex gap='1' align="center">
-                          <Image
-                            src={`/icons/${location.type}-icon.svg`} // Dynamic file path
-                            alt={`${location.type} icon`}
-                            boxSize="14px" // Adjust size as needed
-                            objectFit="contain"
+                          <Image 
+                              src={
+                                location.type === "Shared Pantry" ? "/icons/pantry-icon.svg" :
+                                location.type === "Shared Fridge" ? "/icons/fridge-icon.svg" :
+                                location.type === "Business Partner" ? "/icons/business-icon.svg" :
+                                  "/icons/pantry-icon.svg"  // Fallback icon in case of an unexpected type
+                              }
+                              alt={`${location.type} icon`}
+                                boxSize="14px" // Adjust size as needed
+                                objectFit="contain"
                           />
-                          <Text fontSize="xs" color="text.300">{location.type}</Text>
+                          <Text fontSize="xs"
+                            color={
+                              location.type === "Business Partner"
+                                ? "#F7A016" //orange
+                                : location.type === "Shared Fridge"
+                                ? "#63BB2E" //green
+                                : "#4E7BFE" //blue
+                            }>
+                              {location.type}
+                          </Text>
                         </Flex>
                         ·
                         <Text 
@@ -641,6 +764,7 @@ const defaultCenter = { lat: 47.621484340052824, lng: -122.1766799767942 - lat_s
         )}
       </Box>
     </Box>
+
   );
 };
 

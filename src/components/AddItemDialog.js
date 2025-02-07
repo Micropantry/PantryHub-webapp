@@ -17,7 +17,7 @@ import {
 } from '@chakra-ui/react';
 import { IoMdAdd } from 'react-icons/io';
 import { doc, updateDoc } from 'firebase/firestore';
-import db from '../firebaseConfig'; // Adjust path as needed
+import {db} from '../firebaseConfig'; // Adjust path as needed
 
 const AddItemDialog = ({ selectedLocation, onUpdateWishlist }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
