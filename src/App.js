@@ -36,16 +36,16 @@ import Map from './pages/Map';
 import Home from './pages/Home';
 import About from './pages/About';
 import Dashboard from './pages/Dashboard';
-import UploadInventory from './pages/UploadInventory';
+import UpdatePantry from './pages/UpdatePantry';
 import { Flex, Box } from '@chakra-ui/react';
 
 // Helper component to conditionally render the Navbar
 const Layout = ({ children }) => {
   const location = useLocation();
-  const showNavbar = !['/upload'].includes(location.pathname); // Exclude Navbar on GIXPantry page
+  const showNavbar = !['/updatepantry'].includes(location.pathname); // Exclude Navbar on GIXPantry page
 
   return (
-    <Flex flexDirection="column" h="100vh" w="100vw" bg="background">
+    <Flex flexDirection="column" minH="100vh" w="100vw" bg="background">
       {showNavbar && <Navbar />}
       <Box flex="1" position="relative" mt={showNavbar ? "60px" : "0"}>
         {children}
@@ -63,7 +63,7 @@ const App = () => {
           <Route path="/map" element={<Map />} />
           <Route path="/about" element={<About />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/upload" element={<UploadInventory />} />  {/* New route for GIXPantry */}
+          <Route path="/updatepantry" element={<UpdatePantry />} />  {/* New route for GIXPantry */}
         </Routes>
       </Layout>
     </Router>
