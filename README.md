@@ -1,130 +1,130 @@
-## Little Pantry
-Project Description
-test
+# Little Pantry
 
----
+Little Pantry is a web application designed to help users locate and monitor community pantries. The application provides real-time tracking of pantry conditions, inventory management, and an interactive map interface for easy pantry location.
 
-## **Table of Contents**
+## Features
 
-1. [Getting Started](#getting-started)
-2. [Prerequisites](#prerequisites)
-3. [Installation](#installation)
-4. [Running the App](#running-the-app)
+### For Users
+- **Find Nearby Pantries**: Interactive map with search functionality
+- **Real-time Status**: Check current inventory levels and pantry conditions
+- **Location Details**: View pantry addresses, inventory, and wishlist items
 
----
+### For Pantry Managers
+- **Inventory Management**: Update and track pantry stock levels
+- **Activity Monitoring**: View visitor patterns and usage statistics
+- **Environmental Tracking**: Monitor temperature and humidity conditions
+- **Wishlist Management**: Maintain list of needed items
 
-## **Getting Started**
+## Getting Started
 
-These instructions will help you get a copy of the project up and running on your local machine for development and testing purposes.
+### Prerequisites
+- Node.js (>= 14.x)
+- npm (Node Package Manager)
+- Google Maps API key
 
----
+### Installation
 
-## **Prerequisites**
-
-Make sure you have the following installed on your machine:
-
-- **Node.js** (>= 14.x recommended)
-- **npm** (Node Package Manager)
-- A GitHub account and access to the project repository
-
----
-
-## **Installation**
-
-1. **Clone the repository**:
+1. Clone the repository
 ```bash
-   git clone https://github.com/nancyluoy/LittlePantry.git
+git clone https://github.com/nancyluoy/LittlePantry.git
 ```
 
-2. **Install Dependencies Using npm**:
+2. Install dependencies
 ```bash
-   npm install
+npm install
 ```
 
----
-
-## **Running the App**
-**Run the App Using npm**:
+3. Create a `.env` file in the root directory
 ```bash
-   npm start
+REACT_APP_GOOGLE_MAPS_API_KEY=your_google_maps_api_key
 ```
 
----
+4. Start the development server
+```bash
+npm start
+```
 
-## **Resource**
-- **Icons:**
-https://react-icons.github.io/react-icons/
-<!-- 
+## Project Structure
 
-`npm i web-vitals --save-dev`
+```
+src/
+├── pages/
+│   ├── Map.js           # Main map interface
+│   ├── Dashboard.js     # Monitoring dashboard
+│   ├── UpdatePantry.js  # Inventory management
+│   ├── About.js         # About page
+│   └── Home.js          # Landing page
+├── components/
+│   ├── Navbar.js        # Navigation bar
+│   └── Footer.js        # Footer component
+└── icons/               # SVG icons and markers
+```
 
-# Getting Started with Create React App
+## Pages Overview
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+### Map (Map.js)
+<!-- - Interactive Google Maps interface
+- Location search with Places API -->
+- Responsive sidebar/bottom sheet design
+- Features:
+  <!-- - Address-based pantry search -->
+  - Distance-based sorting
+  - Pantry details view
+  - Current inventory display
 
-## Available Scripts
+### Dashboard (Dashboard.js)
+- Monitoring interface for pantry conditions
+- Responsive card layout
+- Features:
+  - Temperature/humidity tracking
+  - Visitor activity chart
+  - Current inventory status
+  - Latest update messages
+  - Pantry wishlist
 
-In the project directory, you can run:
+### Update Pantry (UpdatePantry.js)
+- Interface for general pantry updates
+- Features:
+  - Add new items to the pantry wishlist
+  - Update the pantry inventory
 
-### `npm start`
+## Technical Details
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### Built With
+- React.js - Frontend framework
+- Chakra UI - Component library
+- Chart.js - Data visualization
+- Google Maps API - Location services
+- Firebase - Backend services
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### API Integration
 
-### `npm test`
+#### Google Maps
+Required APIs:
+- Maps JavaScript API
+- Places API
+- Geocoding API
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+#### Firebase
+Used for:
+- Real-time data storage
 
-### `npm run build`
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Future Enhancements
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+- [ ] Sign up/sign in
+- [ ] Register as a pantry host and add/claim a pantry
+- [ ] Register as a local business partner
+- [ ] Address-based pantry search
+- [ ] "Leave a messages" feature in the pantry info page 
+- [ ] Report issues to the pantry host
+- [ ] Community messaging
+- [ ] Advanced analytics
+- [ ] Mobile/email notifications
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## Resources
 
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify) -->
+- [React Documentation](https://reactjs.org/)
+- [Chakra UI](https://chakra-ui.com/)
+- [Google Maps Platform](https://developers.google.com/maps)
+- [Firebase Documentation](https://firebase.google.com/docs)

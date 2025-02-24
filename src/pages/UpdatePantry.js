@@ -8,13 +8,12 @@ import {
   Textarea,
   SimpleGrid,
   Heading,
-  List,
-  ListItem,
   IconButton,
   HStack,
   Flex,
 } from '@chakra-ui/react';
-import { FiPlus, FiArrowLeft } from 'react-icons/fi';
+import { FiArrowLeft } from 'react-icons/fi';
+import { MdExposurePlus1 } from "react-icons/md";
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { doc, setDoc, getDoc, updateDoc, arrayUnion, serverTimestamp } from 'firebase/firestore';
 import { storage, db } from '../firebaseConfig';
@@ -191,14 +190,14 @@ const UpdatePantry = () => {
                     .map(([item, count]) => (
                       <Button
                         key={item}
-                        size="sm"
+                        // size="sm"
                         variant="outline"
-                        fontSize="sm"
+                        // fontSize="sm"
                         fontWeight="regular"
                         px="2"
                         py="4"
                         bg="white"
-                        rightIcon={<FiPlus />}
+                        rightIcon={<MdExposurePlus1 size="22" color="#009C1F"/>}
                         iconSpacing={1}
                         onClick={() => incrementCount(item)}
                       >
@@ -219,22 +218,13 @@ const UpdatePantry = () => {
                   bg="white"
                   onChange={(e) => setNewWishlistItem(e.target.value)}
                   placeholder="Add new item to wishlist..."
-                  size="md"
-                  borderRadius="8"
-                  _placeholder={{ fontSize: "sm", color: "text.300" }}
+                  // size="md"
+                  // borderRadius="8"
+                  // _placeholder={{ fontSize: "sm", color: "text.300" }}
                 />
-                <Button
-                  onClick={addToWishlist}
-                  size="md"
-                  variant="ghost"
-                  bg="#009C1F"
-                  color="white"
-                  fontWeight="medium"
-                  fontSize="sm"
-                >
-                  Add Item
-                </Button>
+                <Button onClick={addToWishlist} colorScheme="green">Add Item</Button>
               </HStack>
+
           </VStack>
         </VStack>
       </Box>

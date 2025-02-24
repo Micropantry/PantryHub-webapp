@@ -21,6 +21,7 @@ import { IoMdAdd } from "react-icons/io";
 import { FiThumbsUp, FiZoomIn } from "react-icons/fi";
 import { BiSolidFridge } from "react-icons/bi";
 import { FaUser,FaBook } from "react-icons/fa";
+import { MdExposurePlus1 } from "react-icons/md";
 import { useJsApiLoader, GoogleMap, Marker} from '@react-google-maps/api'
 import { doc, updateDoc, collection, getDocs, getDoc } from 'firebase/firestore';
 import {db} from '../firebaseConfig'; // Ensure the path to your Firebase config is correct
@@ -49,9 +50,9 @@ function getIconUrl(locationType, isSelected) {
 
 
 
-const lat_shift = 0.005
-// const defaultCenter = { lat: 47.621484340052824, lng: -122.1766799767942 } //GIX
-const defaultCenter = { lat: 47.621484340052824, lng: -122.1766799767942 - lat_shift } //GIX
+// const lat_shift = 0.005
+const defaultCenter = { lat: 47.621484340052824, lng: -122.1766799767942 } //GIX
+// const defaultCenter = { lat: 47.621484340052824, lng: -122.1766799767942 - lat_shift } //GIX
 
   const Map = () => 
   {
@@ -241,78 +242,35 @@ const defaultCenter = { lat: 47.621484340052824, lng: -122.1766799767942 - lat_s
 
 
   return (
-    <Box flex="1" position="relative" h="100vh">
-      
-      {/* Google Map */}
-      <Box position="absolute" left={0} top={0} h="100%" w="100%">
-        <GoogleMap
-          mapContainerStyle={{
-            width: '100%',
-            height: '100%',
-          }}
-          center={defaultCenter}
-          zoom={16}
-          options={{
-            streetViewControl: false,
-            mapTypeControl: false,
-            fullscreenControl: false,
-            mapId: "1ffb6a8e6175ac3",
-          }}
-        >
-          {/* {locations.map((location) => (
-            <Marker
-              key={location.key}
-              position={location.location}
-              icon={{
-                url: `/icons/${location.type}-pin.svg`,
-                scaledSize: new window.google.maps.Size(
-                  location.key === selectedMarkerKey ? 60 : 45,
-                  location.key === selectedMarkerKey ? 60 : 45
-                ),
-              }}
-              onClick={() => {
-                setSelectedMarkerKey(location.key);
-                // setSelectedLocation(location);
-                // fetchLocations();
-                fetchAndSetSelectedLocation(location);
-              }}
-            />
-          ))} */}
-          {locations.map((location) => (
-            <Marker
-              key={location.key}
-              position={location.location}
-              icon={{
-                url: getIconUrl(location.type, location.key === selectedMarkerKey),
-                scaledSize: new window.google.maps.Size(
-                  location.key === selectedMarkerKey ? 60 : 45,
-                  location.key === selectedMarkerKey ? 60 : 45
-                ),
-              }}
-              onClick={() => {
-                setSelectedMarkerKey(location.key);
-                fetchAndSetSelectedLocation(location);
-              }}
-            />
-          ))}
-        </GoogleMap>
-      </Box>
-
-      {/* Sidebar */}
-      <Box
-        position="fixed"
-        left="4"
-        mt="2"
-        h="90%"
-        w="440px"
-        pb="2"
-        overflow='hidden'
-        borderRadius="24"
+    <Box flex="1" position="relative" display="flex" h="calc(100vh - 64px)">
+       {/* Sidebar */}
+       <Box
+        // position="fixed"
+        // left="4"
+        // mt="2"
+        // h="90%"
+        // w="440px"
+        // pb="2"
+        // overflow='hidden'
+        // borderRadius="24"
+        // bgColor="white"
+        // overflowY="auto" // Enable vertical scrolling
+        // shadow="md"
+        // zIndex="modal"
+        position={{ base: "fixed", md: "relative" }}
+        left={0}
+        bottom={{ base: 0, md: "auto" }}
+        width={{ base: "100%", md: "440px" }}
+        height={{ base: "50vh", md: "100%" }}
+        display="flex"
+        overflow="hidden"
+        overflowY="auto"
+        flexDirection="column"
+        borderRadius={{ base: "24px 24px 0 0", md: "0" }}
         bgColor="white"
-        overflowY="auto" // Enable vertical scrolling
         shadow="md"
         zIndex="modal"
-      >
+        >
 
         {selectedLocation ? (
           <>
@@ -387,14 +345,14 @@ const defaultCenter = { lat: 47.621484340052824, lng: -122.1766799767942 - lat_s
                 </Text> */}
                 <HStack spacing="2" align='center'>
                   <Icon as={FaUser} color="primary"/>
-                  <Text color="text.400" fontSize="sm" fontWeight="medium">{selectedLocation.operator} ({selectedLocation.contact})</Text>
+                  <Text color="text.400" fontSize={{base: "xs", md: "sm"}} fontWeight="medium">{selectedLocation.operator} ({selectedLocation.contact})</Text>
                   {/* <Text> {selectedLocation.contact}(</Text> */}
                 </HStack>
 
                 <Box my="4" >
-                <Flex justifyContent="space-between" p="3" align='center' direction="row" borderTop={'1px #E4EBE4 solid'} borderBottom={'1px #E4EBE4 solid'}>
+                <Flex justifyContent="space-between" p={{base: "2", md: "3"}} align='center' direction="row" borderTop={'1px #E4EBE4 solid'} borderBottom={'1px #E4EBE4 solid'}>
                   <Box>
-                    <Text fontSize="sm" fontWeight="medium" color="text.400"> Type </Text>
+                    <Text fontSize={{base: "xs", md: "sm"}} fontWeight="medium" color="text.400"> Type </Text>
                     <HStack mt="1" spacing="1" align='center'>
                       <Image 
                           src={
@@ -405,7 +363,7 @@ const defaultCenter = { lat: 47.621484340052824, lng: -122.1766799767942 - lat_s
                           }
                           boxSize={"18px"}
                       />
-                      <Text fontSize="sm" fontWeight="medium"
+                      <Text fontSize={{base: "xs", md: "sm"}} fontWeight="medium"
                             color={
                               selectedLocation.type === "Business Partner"
                                 ? "#F7A016" //orange
@@ -419,13 +377,13 @@ const defaultCenter = { lat: 47.621484340052824, lng: -122.1766799767942 - lat_s
                   </Box>
                   <Divider orientation='vertical' borderColor="#E4EBE4"  borderWidth="1px" h="10"/>
                   <Box>
-                    <Text fontSize="sm" fontWeight="medium" color="text.400"> Hours </Text>
-                    <Text mt="1" color="green" fontWeight="medium" fontSize={"sm"}> Open 24/7</Text>
+                    <Text fontSize={{base: "xs", md: "sm"}} fontWeight="medium" color="text.400"> Hours </Text>
+                    <Text mt="1" color="green" fontWeight="medium" fontSize={{base: "xs", md: "sm"}}> Open 24/7</Text>
                   </Box>
                   <Divider orientation='vertical' borderColor="#E4EBE4"  borderWidth="1px" h="10"/>
                   <Box>
-                    <Text fontSize="sm" fontWeight="medium" color="text.400"> Current Stock </Text>
-                    <Text mt="1" fontSize="sm" fontWeight="medium" color={
+                    <Text fontSize={{base: "xs", md: "sm"}} fontWeight="medium" color="text.400"> Current Stock </Text>
+                    <Text mt="1" fontSize={{base: "xs", md: "sm"}} fontWeight="medium" color={
                             selectedLocation.stockLevel === "Full"
                               ? "green.500"
                               : selectedLocation.stockLevel === "Medium"
@@ -439,9 +397,9 @@ const defaultCenter = { lat: 47.621484340052824, lng: -122.1766799767942 - lat_s
               </Box>
 
               {selectedLocation && selectedLocation.inventoryImage ? (
-                  <HStack px="3" py="3" mb="2" justifyContent={'space-between'} h="150px"align='center' bg="background" borderRadius="8">
+                  <HStack px={{base: "2", md: "3"}} py={{base: "2", md: "3"}} mb="2" justifyContent={'space-between'} h={{base: "120px", md: "150px"}}align='center' bg="background" borderRadius="8">
                     <VStack align="left" h="100%" justifyContent={'space-between'} flex="2">
-                      <Text fontSize="sm" fontWeight="medium" color="text.400">
+                      <Text fontSize={{base: "xs", md: "sm"}} fontWeight="medium" color="text.400">
                         Inventory Update
                       </Text>
                       <VStack spacing="1" align={"left"}>
@@ -514,7 +472,7 @@ const defaultCenter = { lat: 47.621484340052824, lng: -122.1766799767942 - lat_s
               <VStack px="6" py="3" spacing="3">
                 <Box w="100%">
                   <HStack justifyContent="space-between" align='center' >
-                    <Text my="2" fontSize="lg" fontWeight="medium">
+                    <Text my="2" fontSize={{base: "md", md: "lg"}} fontWeight="medium">
                       Pantry Wishlist
                     </Text>
                     {/* <IconButton
@@ -546,11 +504,12 @@ const defaultCenter = { lat: 47.621484340052824, lng: -122.1766799767942 - lat_s
                           key={item}
                           size="sm"
                           variant="outline" // Change to 'solid' if you prefer filled buttons
-                          fontSize="sm" // Text size
+                          fontSize={{base: "xs", md: "sm"}} // Text size
                           fontWeight="regular" // Text weight
-                          px="2" // Horizontal padding
-                          py="4" // Vertical padding
-                          rightIcon={<FiThumbsUp />}
+                          px={{base: "2", md: "3"}} // Horizontal padding
+                          py={{base: "2", md: "4"}} // Vertical padding
+                          // rightIcon={<FiThumbsUp />}
+                          rightIcon={<MdExposurePlus1 size="18" color="#009C1F"/>}
                           iconSpacing={1}
                           onClick={() => incrementQuantity(item)}
                         >
@@ -569,10 +528,10 @@ const defaultCenter = { lat: 47.621484340052824, lng: -122.1766799767942 - lat_s
                 
                 {/* Support us */}
                 <Box pb="1"> 
-                  <Text fontSize="lg" fontWeight="medium">
+                  <Text fontSize={{base: "md", md: "lg"}} fontWeight="medium">
                     Support us
                   </Text>
-                  <Text fontSize="sm" color="text.300">
+                  <Text fontSize={{base: "xs", md: "sm"}} color="text.300">
                     Every contribution makes a difference!
                   </Text>
                   <HStack mt="2" alignItems="stretch" h="auto" justify= "space-between">
@@ -597,7 +556,7 @@ const defaultCenter = { lat: 47.621484340052824, lng: -122.1766799767942 - lat_s
                   </HStack>
 
                   <Link href="" mt="2" display="flex" alignItems="center" isExternal>
-                    <Text  fontSize="sm" color="primary" > Safety Guidelines </Text>
+                    <Text  fontSize={{base: "xs", md: "sm"}} color="primary" > Safety Guidelines </Text>
                   </Link>
                 </Box>
               </VStack>
@@ -606,7 +565,7 @@ const defaultCenter = { lat: 47.621484340052824, lng: -122.1766799767942 - lat_s
 
               {/* Messages */}
               <VStack  px="6" py="3" spacing="2" align="start">
-                <Text fontSize="lg" fontWeight="medium">
+                <Text fontSize={{base: "md", md: "lg"}} fontWeight="medium">
                   Leave a message
                 </Text>
                 {/* Message input */}
@@ -763,6 +722,63 @@ const defaultCenter = { lat: 47.621484340052824, lng: -122.1766799767942 - lat_s
           </Box>
         )}
       </Box>
+      
+      {/* Google Map */}
+      <Box flex={1} position="relative" h={{ base: "50vh", md: "100%" }}>
+        <GoogleMap
+          mapContainerStyle={{
+            width: '100%',
+            height: '100%',
+          }}
+          center={defaultCenter}
+          zoom={16}
+          options={{
+            streetViewControl: false,
+            mapTypeControl: false,
+            fullscreenControl: false,
+            mapId: "1ffb6a8e6175ac3",
+          }}
+        >
+          {/* {locations.map((location) => (
+            <Marker
+              key={location.key}
+              position={location.location}
+              icon={{
+                url: `/icons/${location.type}-pin.svg`,
+                scaledSize: new window.google.maps.Size(
+                  location.key === selectedMarkerKey ? 60 : 45,
+                  location.key === selectedMarkerKey ? 60 : 45
+                ),
+              }}
+              onClick={() => {
+                setSelectedMarkerKey(location.key);
+                // setSelectedLocation(location);
+                // fetchLocations();
+                fetchAndSetSelectedLocation(location);
+              }}
+            />
+          ))} */}
+          {locations.map((location) => (
+            <Marker
+              key={location.key}
+              position={location.location}
+              icon={{
+                url: getIconUrl(location.type, location.key === selectedMarkerKey),
+                scaledSize: new window.google.maps.Size(
+                  location.key === selectedMarkerKey ? 60 : 45,
+                  location.key === selectedMarkerKey ? 60 : 45
+                ),
+              }}
+              onClick={() => {
+                setSelectedMarkerKey(location.key);
+                fetchAndSetSelectedLocation(location);
+              }}
+            />
+          ))}
+        </GoogleMap>
+      </Box>
+
+     
     </Box>
 
   );

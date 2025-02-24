@@ -8,6 +8,7 @@ import { Box, Flex, Text, VStack, Modal, ModalOverlay, ModalContent, ModalBody, 
   AlertDialogOverlay,
   Button,
   IconButton,
+  SimpleGrid,
 } from '@chakra-ui/react';
 import mqtt from 'mqtt';
 import axios from 'axios';
@@ -430,14 +431,86 @@ const chartOptions = {
   
 
   return (
-    <Box px="8" py="4" maxW="1600px" mx="auto" bg="background" h="calc(100vh - 64px)" >
+    <Box px={{base:"4", md:"8"}} py="4" maxW="1600px" mx="auto" bg="background" h="calc(100vh - 64px)" overflowY="auto" >
       <VStack spacing="4" align="start" h="100%" >
         <Text fontSize="2xl" fontWeight="bold">
           GIX Pantry's Dashboard
         </Text>
 
         {/* Status Cards */}
-        <Flex direction="row" gap="4" w="100%" h="150px" >
+        <Flex direction={{base: "column", md: "row"}} gap="4" w="100%"  >
+          
+
+          {/* Inventory Update Card */}
+          {inventoryUpdate && (
+            <HStack 
+              flex="2"
+              px="4" 
+              py="4" 
+              justifyContent="space-between" 
+              align="center" 
+              bg="white"
+              borderWidth="1px"
+              borderColor="grey.500"
+              borderRadius="3xl"
+              maxH="150px"
+              minH="150px"
+            >
+              <VStack align="start" h="100%" justifyContent="space-between" flex="2">
+                <VStack gap="1" align="start">
+                  <Text fontSize="sm">Inventory Update</Text>
+                
+                  <Text fontSize="md" fontWeight="medium">
+                    "{inventoryUpdate.message}"
+                  </Text>
+                </VStack>
+                  <Text fontSize="sm" color="gray.500">
+                    {/* {inventoryUpdate.time?.toDate().toLocaleString()} */}
+                    {inventoryUpdate.time ? formatPSTTime(inventoryUpdate.time.toDate()) : 'No data'}
+                  </Text>
+                
+              </VStack>
+              
+              <Box position="relative" flex="1.5" h="100%">
+                <Image
+                  src={inventoryUpdate.imageURL}
+                  h="100%"
+                  w="100%"
+                  borderRadius="2xl"
+                  objectFit="cover"
+                  cursor="pointer"
+                  onClick={onOpen}
+                />
+                <Icon
+                  as={FiZoomIn}
+                  position="absolute"
+                  right="5px"
+                  bottom="5px"
+                  color="white"
+                  w={6}
+                  h={6}
+                  onClick={onOpen}
+                  cursor="pointer"
+                />
+              </Box>
+            </HStack>
+          )}
+
+          {/* Modal for enlarged image */}
+          <Modal isOpen={isOpen} onClose={onClose} size="xl">
+            <ModalOverlay />
+            <ModalContent>
+              <ModalBody>
+                <Image
+                  src={inventoryUpdate?.imageURL}
+                  maxW="100%"
+                  maxH="100%"
+                  borderRadius="8"
+                />
+              </ModalBody>
+            </ModalContent>
+          </Modal>
+
           {/* Current Stock Card */}
           <VStack 
             flex="1" 
@@ -467,76 +540,6 @@ const chartOptions = {
                 {stockLevelText(latestItemCount?.value|| 0).text}
             </Text>
           </VStack>
-
-          {/* Inventory Update Card */}
-        {inventoryUpdate && (
-          <HStack 
-            flex="2"
-            px="4" 
-            py="4" 
-            justifyContent="space-between" 
-            align="center" 
-            bg="white"
-            borderWidth="1px"
-            borderColor="grey.500"
-            borderRadius="3xl"
-          >
-            <VStack align="start" h="100%" justifyContent="space-between" flex="2">
-              <VStack gap="1" align="start">
-                <Text fontSize="sm">Inventory Update</Text>
-              
-                <Text fontSize="md" fontWeight="medium">
-                  "{inventoryUpdate.message}"
-                </Text>
-              </VStack>
-                <Text fontSize="sm" color="gray.500">
-                  {/* {inventoryUpdate.time?.toDate().toLocaleString()} */}
-                  {inventoryUpdate.time ? formatPSTTime(inventoryUpdate.time.toDate()) : 'No data'}
-                </Text>
-              
-            </VStack>
-            
-            <Box position="relative" flex="1.5" height="100%">
-              <Image
-                src={inventoryUpdate.imageURL}
-                h="100%"
-                w="100%"
-                borderRadius="2xl"
-                objectFit="cover"
-                cursor="pointer"
-                onClick={onOpen}
-              />
-              <Icon
-                as={FiZoomIn}
-                position="absolute"
-                right="5px"
-                bottom="5px"
-                color="white"
-                w={6}
-                h={6}
-                onClick={onOpen}
-                cursor="pointer"
-              />
-            </Box>
-          </HStack>
-        )}
-
-        {/* Modal for enlarged image */}
-        <Modal isOpen={isOpen} onClose={onClose} size="xl">
-          <ModalOverlay />
-          <ModalContent>
-            <ModalBody>
-              <Image
-                src={inventoryUpdate?.imageURL}
-                maxW="100%"
-                maxH="100%"
-                borderRadius="8"
-              />
-            </ModalBody>
-          </ModalContent>
-        </Modal>
-
-
 
           {/* Temperature Card */}
           <VStack 
@@ -597,7 +600,7 @@ const chartOptions = {
         </Flex>
 
         {/* Activity Log and Wishlist Container */}
-        <Flex direction="row" gap="4" w="100%" flex="1" minH="400px" maxH="600px">
+        <Flex direction={{base: "column", md: "row"}} gap="4" w="100%" flex="1" minH={{base:"600px", md:"400px"}} maxH={{base:"none", md:"600px"}}>
           {/* Activity Log */}
           <VStack 
             spacing="2" 
@@ -610,10 +613,10 @@ const chartOptions = {
             gap="2" 
             align="start" 
             h="100%"
-            flex="3"
+            flex={{base:"1", md:"3"}}
           >
-            <Flex w="100%" justify="space-between" align="center" shrink="0">
-              <Text fontSize="lg" fontWeight="bold">
+            <Flex w="100%" justify="space-between" align="center" >
+              <Text fontSize={{base:"md", md:"lg"}} fontWeight="bold">
                 Visitor Activity Log
               </Text>
               <HStack spacing={2}>
@@ -643,7 +646,7 @@ const chartOptions = {
 
             {/* Conditionally render chart only when there's data */}
             {doorEvents.length > 0 ? (
-              <Box w="100%" h="200px" pr="4">
+              <Box w="100%" h="200px" pr="4" flex="1">
                 <Bar data={chartData} options={chartOptions} />
               </Box>
             ) : (
@@ -653,53 +656,53 @@ const chartOptions = {
             )}
 
 
-          {/* Activity Log List */}
-          <VStack 
-            w="100%" 
-            flex="1"
-            overflowY="auto" 
-            spacing="2"
-            align="start"
-            minH="0"
-          >
-            {doorEvents.length === 0 ? (
-              <Box w="100%" h="90%" display="flex" justifyContent="center" alignItems="center">
-                <Text fontSize="lg" color="gray.500">No events found</Text>
-              </Box>
-              
-            ) : (
-              doorEvents
-                .sort((a, b) => b.time - a.time)
-                .map((event, index) => (
-                  <Flex 
-                    key={index}
-                    w="100%" 
-                    justify="space-between" 
-                    py="2" 
-                    pr="4"
-                    borderBottom="1px" 
-                    borderColor="gray.200"
-                  >
-                    <Text fontSize="sm" >
-                      {format(event.time, 'HH:mm')}
-                    </Text>
-                    <Text 
-                      fontSize="sm"
-                      color={"gray.500"}
+            {/* Activity Log List */}
+            <VStack 
+              w="100%" 
+              flex="1"
+              overflowY="auto" 
+              spacing="2"
+              align="start"
+              minH="0"
+            >
+              {doorEvents.length === 0 ? (
+                <Box w="100%" h="90%" display="flex" justifyContent="center" alignItems="center">
+                  <Text fontSize="lg" color="gray.500">No events found</Text>
+                </Box>
+                
+              ) : (
+                doorEvents
+                  .sort((a, b) => b.time - a.time)
+                  .map((event, index) => (
+                    <Flex 
+                      key={index}
+                      w="100%" 
+                      justify="space-between" 
+                      py="2" 
+                      pr="4"
+                      borderBottom="1px" 
+                      borderColor="gray.200"
                     >
-                      {event.value}
-                    </Text>
-                  </Flex>
-                ))
-            )}
-          </VStack>
+                      <Text fontSize="sm" >
+                        {format(event.time, 'HH:mm')}
+                      </Text>
+                      <Text 
+                        fontSize="sm"
+                        color={"gray.500"}
+                      >
+                        {event.value}
+                      </Text>
+                    </Flex>
+                  ))
+              )}
+            </VStack>
 
           
           </VStack>
 
           {/* Wishlist Section */}
           <VStack
-            flex="2"
+            flex={{base:"1", md:"2"}}
             spacing="2"
             background="white"
             borderWidth="1px"
@@ -721,8 +724,8 @@ const chartOptions = {
             )}
           </VStack>
       
-          </Flex>
-        </VStack>
+        </Flex>
+      </VStack>
     </Box>
   );
 };
