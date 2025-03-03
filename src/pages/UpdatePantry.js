@@ -27,6 +27,7 @@ const UpdatePantry = () => {
   const [uploadStatus, setUploadStatus] = useState("");
   const [wishlistItems, setWishlistItems] = useState({});
   const [newWishlistItem, setNewWishlistItem] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
 
   // Fetch existing wishlist on component mount
   useEffect(() => {
@@ -92,6 +93,8 @@ const UpdatePantry = () => {
       return;
     }
 
+    setIsUploading(true);
+
     try {
       const storageRef = ref(storage, `/${pantryID}/inventoryImg`);
       const snapshot = await uploadBytes(storageRef, image);
@@ -117,6 +120,8 @@ const UpdatePantry = () => {
     } catch (error) {
       console.error("Upload error:", error);
       setUploadStatus("Failed to update inventory.");
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -254,7 +259,7 @@ const UpdatePantry = () => {
             onChange={(e) => setMessage(e.target.value)} 
           />
 
-          <Button onClick={handleUpload} colorScheme="green">Upload</Button>
+          <Button onClick={handleUpload} colorScheme="green" isLoading={isUploading} loadingText="Uploading...">Upload</Button>
           <Text>{uploadStatus}</Text>
         </VStack>
       </Box>

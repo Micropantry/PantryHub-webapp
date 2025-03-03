@@ -100,97 +100,99 @@ const Dashboard = () => {
   
     return { startStr, endStr };
   };
-// Update fetchDoorEvents to use UTC dates
-const fetchDoorEvents = async (dateStr = 'today') => {
-  try {
-    const { startStr, endStr } = getDateRange(dateStr);
-    
-    const response = await axios.get(
-      `https://io.adafruit.com/api/v2/${OWNER_USERNAME}/feeds/${DOOR_FEED_KEY}/data`, {
-        headers: { 'X-AIO-Key': AIO_KEY },
-        params: {
-          start_time: startStr,
-          end_time: endStr,
-          limit: 1000
+
+  // Update fetchDoorEvents to fetchItemCountEvents
+  const fetchItemCountEvents = async (dateStr = 'today') => {
+    try {
+      const { startStr, endStr } = getDateRange(dateStr);
+      
+      const response = await axios.get(
+        `https://io.adafruit.com/api/v2/${OWNER_USERNAME}/feeds/${ITEM_COUNT_FEED_KEY}/data`, {
+          headers: { 'X-AIO-Key': AIO_KEY },
+          params: {
+            start_time: startStr,
+            end_time: endStr,
+            limit: 1000
+          }
         }
-      }
-    );
+      );
 
-    const events = response.data.map(event => ({
-      time: new Date(event.created_at),
-      value: event.value
-    }));
+      const events = response.data.map(event => {
+        const [count, added, removed] = event.value.split(',').map(num => parseInt(num, 10));
+        return {
+          time: new Date(event.created_at),
+          count,
+          added,
+          removed,
+          // Create a descriptive message for the event
+          value: `${added > 1 ? `${added} items` : `${added} item`} added, ${removed > 1 ? `${removed} items` : `${removed} item`} removed (Total: ${count})`
+        };
+      });
 
-    setDoorEvents(events);
+      setDoorEvents(events); // We can keep the same state variable or rename it if preferred
 
-    // Process data for chart
-    const hourlyVisits = processHourlyVisits(events);
-    setChartData({
-      labels: Array.from({length: 24}, (_, i) => `${String(i).padStart(2, '0')}:00`),
-      datasets: [
-        {
-          label: 'Visits',
-          data: hourlyVisits,
-          backgroundColor: '#95B791',
-          // borderColor: 'rgb(53, 162, 235)',
-          // borderWidth: 1,
-        }
-      ]
-    });
-  } catch (error) {
-    console.error('Error fetching door events:', error);
-  }
-};
+      // Process data for chart
+      const hourlyVisits = processHourlyVisits(events);
+      setChartData({
+        labels: Array.from({length: 24}, (_, i) => `${String(i).padStart(2, '0')}:00`),
+        datasets: [
+          {
+            label: 'Item Events',
+            data: hourlyVisits,
+            backgroundColor: '#95B791',
+          }
+        ]
+      });
+    } catch (error) {
+      console.error('Error fetching item count events:', error);
+    }
+  };
 
-
-// Add chart options
-const chartOptions = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: {
-    legend: {
-      display: false,
-      position: 'top',
-    },
-    title: {
-      display: false,
-      text: 'Visits per Hour',  // Updated title
-    },
-    tooltip: {
-      callbacks: {
-        label: (context) => `${context.parsed.y} events`,  // Updated tooltip
+  // Add chart options
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false,
+        position: 'top',
+      },
+      title: {
+        display: false,
+        text: 'Visits per Hour',  // Updated title
+      },
+      tooltip: {
+        callbacks: {
+          label: (context) => `${context.parsed.y} events`,  // Updated tooltip
+        },
       },
     },
-  },
-  scales: {
-    y: {
-      beginAtZero: true,
-      ticks: {
-        stepSize: 1,
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          stepSize: 1,
+        },
       },
     },
-  },
-};
+  };
 
-
-  // Add date selection handler
+  // Update handleDateChange to use fetchItemCountEvents
   const handleDateChange = (direction) => {
     let newDate;
     if (direction === 'prev') {
       newDate = subDays(selectedDate, 1);
-      // Prevent selecting dates before the earliest date
       if (newDate < EARLIEST_DATE) {
         return;
       }
     } else if (direction === 'next') {
       newDate = addDays(selectedDate, 1);
-      // Prevent selecting future dates
       if (newDate > new Date()) {
         return;
       }
     }
     setSelectedDate(newDate);
-    fetchDoorEvents(format(newDate, 'yyyy-MM-dd'));
+    fetchItemCountEvents(format(newDate, 'yyyy-MM-dd'));
   };
 
   const formatPSTTime = (date) => {
@@ -275,9 +277,13 @@ const chartOptions = {
       }
 
       if (itemCountResponse.data && itemCountResponse.data.length > 0) {
-        const newCount = parseInt(itemCountResponse.data[0].value);
+        // const newCount = parseInt(itemCountResponse.data[0].value);
+        const [newCount, itemAdded, itemRemoved] = itemCountResponse.data[0].value.split(',').map(num => parseInt(num, 10));
+
         setLatestItemCount({
           value: newCount,
+          itemAdded: itemAdded,
+          itemRemoved: itemRemoved,
           timestamp: new Date(itemCountResponse.data[0].created_at)
         });
         // Update Firebase when item count changes
@@ -309,7 +315,7 @@ const chartOptions = {
   useEffect(() => {
     fetchLatestSensorData();
     fetchPantryData(); 
-    fetchDoorEvents();
+    fetchItemCountEvents();
     const client = mqtt.connect('wss://io.adafruit.com:443/mqtt', {
       username: AIO_USERNAME,
       password: AIO_KEY,
@@ -319,7 +325,6 @@ const chartOptions = {
       console.log('MQTT Connected');
       client.subscribe([
         `${OWNER_USERNAME}/feeds/${WEIGHT_FEED_KEY}`,
-        `${DOOR_FEED_KEY}`,
         `${ITEM_COUNT_FEED_KEY}`,
         `${TEMPERATURE_FEED_KEY}`,
         `${HUMIDITY_FEED_KEY}`,
@@ -329,8 +334,8 @@ const chartOptions = {
     client.on('message', (topic, message) => {
       if (topic.includes(TEMPERATURE_FEED_KEY) || topic.includes(HUMIDITY_FEED_KEY)) {
         fetchLatestSensorData();
-      } else if (topic.includes(DOOR_FEED_KEY)) {
-        fetchDoorEvents();
+      } else if (topic.includes(ITEM_COUNT_FEED_KEY)) {
+        fetchItemCountEvents();
       }
     });
 
@@ -364,7 +369,9 @@ const chartOptions = {
   // Update the renderWishlistItems function
   const renderWishlistItems = () => (
     <VStack spacing="2" align="start" w="100%">
-      {Object.entries(wishlist).map(([item, quantity]) => (
+      {Object.entries(wishlist)
+      .sort(([, a], [, b]) => b - a) // Sort by quantity in descending order
+      .map(([item, quantity]) => (
         <Flex 
           key={item} 
           w="100%" 
@@ -683,7 +690,7 @@ const chartOptions = {
                       borderBottom="1px" 
                       borderColor="gray.200"
                     >
-                      <Text fontSize="sm" >
+                      <Text fontSize="sm" fontWeight="medium">
                         {format(event.time, 'HH:mm')}
                       </Text>
                       <Text 
