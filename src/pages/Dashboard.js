@@ -39,7 +39,14 @@ const Dashboard = () => {
   const [itemToDelete, setItemToDelete] = useState(null);
   const cancelRef = useRef();
 
-  const [chartData, setChartData] = useState([]);
+  const [chartData, setChartData] = useState({
+    labels: Array.from({length: 24}, (_, i) => `${String(i).padStart(2, '0')}:00`),
+    datasets: [{
+      label: 'Item Events',
+      data: Array(24).fill(0),
+      backgroundColor: '#95B791',
+    }]
+  });
 
   const [selectedDate, setSelectedDate] = useState(new Date());
   const EARLIEST_DATE = parseISO('2025-02-19'); // Set the earliest available date
@@ -101,7 +108,7 @@ const Dashboard = () => {
     return { startStr, endStr };
   };
 
-  // Update fetchDoorEvents to fetchItemCountEvents
+  // Update fetchItemCountEvents to handle empty data
   const fetchItemCountEvents = async (dateStr = 'today') => {
     try {
       const { startStr, endStr } = getDateRange(dateStr);
@@ -117,34 +124,62 @@ const Dashboard = () => {
         }
       );
 
-      const events = response.data.map(event => {
+      let events = response.data.map(event => {
         const [count, added, removed] = event.value.split(',').map(num => parseInt(num, 10));
         return {
           time: new Date(event.created_at),
           count,
           added,
           removed,
-          // Create a descriptive message for the event
-          value: `${added > 1 ? `${added} items` : `${added} item`} added, ${removed > 1 ? `${removed} items` : `${removed} item`} removed (Total: ${count})`
+          value: `${added > 0 ? `Added ${added}` : `Removed ${removed}`} items (Total: ${count})`
         };
       });
 
-      setDoorEvents(events); // We can keep the same state variable or rename it if preferred
+      // Add the latest item count if it exists and is from today
+      if (latestItemCount && isToday(latestItemCount.timestamp)) {
+        const latestEvent = {
+          time: latestItemCount.timestamp,
+          count: latestItemCount.value,
+          added: latestItemCount.itemAdded,
+          removed: latestItemCount.itemRemoved,
+          value: `${latestItemCount.itemAdded > 0 ? `Added ${latestItemCount.itemAdded}` : `Removed ${latestItemCount.itemRemoved}`} items (Total: ${latestItemCount.value})`
+        };
+
+        // Check if this event is already in the list
+        const isDuplicate = events.some(event => 
+          event.count === latestEvent.count && 
+          event.added === latestEvent.added && 
+          event.removed === latestEvent.removed &&
+          Math.abs(event.time - latestEvent.time) < 1000 // within 1 second
+        );
+
+        if (!isDuplicate) {
+          events = [latestEvent, ...events];
+        }
+      }
+
+      setDoorEvents(events);
 
       // Process data for chart
       const hourlyVisits = processHourlyVisits(events);
-      setChartData({
-        labels: Array.from({length: 24}, (_, i) => `${String(i).padStart(2, '0')}:00`),
-        datasets: [
-          {
-            label: 'Item Events',
-            data: hourlyVisits,
-            backgroundColor: '#95B791',
-          }
-        ]
-      });
+      setChartData(prevData => ({
+        ...prevData,
+        datasets: [{
+          ...prevData.datasets[0],
+          data: hourlyVisits
+        }]
+      }));
+
     } catch (error) {
       console.error('Error fetching item count events:', error);
+      setDoorEvents([]);
+      setChartData(prevData => ({
+        ...prevData,
+        datasets: [{
+          ...prevData.datasets[0],
+          data: Array(24).fill(0)
+        }]
+      }));
     }
   };
 
@@ -229,18 +264,18 @@ const Dashboard = () => {
   };
 
   
-  // Update Firebase Stock
-  const updateFirebaseStock = async (newCount) => {
-    try {
-      const docRef = doc(db, 'locations', '1iRz80rI3ruAGtk6CPQU');
-      await updateDoc(docRef, {
-        currentStock: newCount
-      });
-      console.log('Stock updated in Firebase:', newCount);
-    } catch (error) {
-      console.error('Error updating stock in Firebase:', error);
-    }
-  };
+  // // Update Firebase Stock
+  // const updateFirebaseStock = async (newCount) => {
+  //   try {
+  //     const docRef = doc(db, 'locations', '1iRz80rI3ruAGtk6CPQU');
+  //     await updateDoc(docRef, {
+  //       currentStock: newCount
+  //     });
+  //     console.log('Stock updated in Firebase:', newCount);
+  //   } catch (error) {
+  //     console.error('Error updating stock in Firebase:', error);
+  //   }
+  // };
 
   const fetchLatestSensorData = async () => {
     try {
@@ -287,7 +322,7 @@ const Dashboard = () => {
           timestamp: new Date(itemCountResponse.data[0].created_at)
         });
         // Update Firebase when item count changes
-        updateFirebaseStock(newCount);
+        // updateFirebaseStock(newCount);
       }
 
     } catch (error) {
@@ -313,34 +348,78 @@ const Dashboard = () => {
 
 
   useEffect(() => {
-    fetchLatestSensorData();
-    fetchPantryData(); 
-    fetchItemCountEvents();
+    let isSubscribed = true;  // Add this flag
+
+    const fetchData = async () => {
+      try {
+        await fetchLatestSensorData();
+        if (isSubscribed) {
+          await fetchPantryData(); 
+          await fetchItemCountEvents();
+        }
+      } catch (error) {
+        console.error('Error fetching initial data:', error);
+      }
+    };
+
+    fetchData();
+
+    // MQTT client setup
     const client = mqtt.connect('wss://io.adafruit.com:443/mqtt', {
       username: AIO_USERNAME,
       password: AIO_KEY,
+      reconnectPeriod: 5000,
     });
+
+    const topics = [
+      `${AIO_USERNAME}/feeds/${WEIGHT_FEED_KEY}`,
+      `${AIO_USERNAME}/feeds/${ITEM_COUNT_FEED_KEY}`,
+      `${AIO_USERNAME}/feeds/${TEMPERATURE_FEED_KEY}`,
+      `${AIO_USERNAME}/feeds/${HUMIDITY_FEED_KEY}`
+    ];
 
     client.on('connect', () => {
       console.log('MQTT Connected');
-      client.subscribe([
-        `${OWNER_USERNAME}/feeds/${WEIGHT_FEED_KEY}`,
-        `${ITEM_COUNT_FEED_KEY}`,
-        `${TEMPERATURE_FEED_KEY}`,
-        `${HUMIDITY_FEED_KEY}`,
-      ]);
+      topics.forEach(topic => {
+        client.subscribe(topic, (err) => {
+          if (err) {
+            console.error(`Failed to subscribe to ${topic}:`, err);
+          } else {
+            console.log(`Successfully subscribed to ${topic}`);
+          }
+        });
+      });
     });
 
     client.on('message', (topic, message) => {
+      if (!isSubscribed) return;
+      
+      console.log('Received MQTT message:', topic, message.toString());
+      
       if (topic.includes(TEMPERATURE_FEED_KEY) || topic.includes(HUMIDITY_FEED_KEY)) {
         fetchLatestSensorData();
       } else if (topic.includes(ITEM_COUNT_FEED_KEY)) {
+        // Parse the message and update states immediately
+        const messageStr = message.toString();
+        const [newCount, itemAdded, itemRemoved] = messageStr.split(',').map(num => parseInt(num, 10));
+        
+        // Update latest item count immediately
+        setLatestItemCount({
+          value: newCount,
+          itemAdded: itemAdded,
+          itemRemoved: itemRemoved,
+          timestamp: new Date()
+        });
+
+        // Fetch updated events for the chart
         fetchItemCountEvents();
       }
     });
 
     return () => {
+      isSubscribed = false;  // Clean up flag
       if (client) {
+        topics.forEach(topic => client.unsubscribe(topic));
         client.end();
       }
     };

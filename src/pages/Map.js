@@ -26,6 +26,7 @@ import { useJsApiLoader, GoogleMap, Marker} from '@react-google-maps/api'
 import { doc, updateDoc, collection, getDocs, getDoc } from 'firebase/firestore';
 import {db} from '../firebaseConfig'; // Ensure the path to your Firebase config is correct
 import AddItemDialog from '../components/AddItemDialog';
+import {onSnapshot } from 'firebase/firestore';
 
 
 function calculateDistance(lat1, lng1, lat2, lng2) {
@@ -208,10 +209,62 @@ const defaultCenter = { lat: 47.621484340052824, lng: -122.1766799767942 } //GIX
   }, [filters, locations]);
 
   // Fetch data for the selected marker
+  // useEffect(() => {
+  //   fetchPantryData();
+  // }, [selectedMarkerKey]); // Runs whenever selectedMarkerKey changes
   useEffect(() => {
-    fetchPantryData();
-  }, [selectedMarkerKey]); // Runs whenever selectedMarkerKey changes
-
+    let unsubscribe;
+  
+    if (selectedMarkerKey) {
+      console.log("Setting up real-time listener for:", selectedMarkerKey); // Debug log
+      const locationRef = doc(db, 'locations', selectedMarkerKey);
+      
+      unsubscribe = onSnapshot(locationRef, (docSnap) => {
+        console.log("Received update for:", selectedMarkerKey); // Debug log
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          console.log("New data:", data); // Debug log
+          
+          // Calculate distance
+          const distance = calculateDistance(
+            defaultCenter.lat, defaultCenter.lng,
+            data.location.latitude, data.location.longitude
+          );
+  
+          // Determine stock level
+          let stockLevel = "Low Stock";
+          if (data.currentStock >= 10 && data.currentStock < 20) {
+            stockLevel = "Medium Stock";
+          } else if (data.currentStock >= 20) {
+            stockLevel = "Full Stock";
+          }
+  
+          setSelectedLocation({
+            key: selectedMarkerKey,
+            ...data,
+            stockLevel,
+            location: {
+              lat: data.location.latitude,
+              lng: data.location.longitude,
+            },
+            distance,
+          });
+        } else {
+          console.log('No such document!');
+        }
+      }, (error) => {
+        console.error('Error listening to location updates:', error);
+      });
+    }
+  
+    // Cleanup function
+    return () => {
+      if (unsubscribe) {
+        console.log("Cleaning up listener for:", selectedMarkerKey); // Debug log
+        unsubscribe();
+      }
+    };
+  }, [selectedMarkerKey]);
     
   if (!isLoaded) {
     return <Box>Loading Map...</Box>; // Render a loading message or skeleton while the API loads
