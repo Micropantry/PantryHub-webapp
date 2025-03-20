@@ -1,6 +1,6 @@
-# Little Pantry
+# Pantry Hub
 
-Little Pantry is a web application designed to help users locate and monitor community pantries. The application provides real-time tracking of pantry conditions, inventory management, and an interactive map interface for easy pantry location.
+Pantry Hub is a web application designed to help users locate and monitor community pantries. The application provides real-time tracking of pantry conditions, inventory management, and an interactive map interface for easy pantry location.
 
 ## Features
 
