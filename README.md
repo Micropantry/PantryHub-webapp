@@ -26,7 +26,7 @@ Little Pantry is a web application designed to help users locate and monitor com
 
 1. Clone the repository
 ```bash
-git clone https://github.com/nancyluoy/LittlePantry.git
+git clone https://github.com/Micropantry/PantryHub-webapp.git
 ```
 
 2. Install dependencies
@@ -37,6 +37,15 @@ npm install
 3. Create a `.env` file in the root directory
 ```bash
 REACT_APP_GOOGLE_MAPS_API_KEY=your_google_maps_api_key
+
+REACT_APP_AIO_KEY=your_adafruit_IO_key
+
+REACT_APP_FIREBASE_API_KEY=your_firebase_key
+REACT_APP_FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
+REACT_APP_FIREBASE_PROJECT_ID=your_firebase_project_id
+REACT_APP_FIREBASE_STORAGE_BUCKET=your_firebase_storage_bucket
+REACT_APP_FIREBASE_MESSAGING_SENDER_ID=your_firebase_messaging_sender_id
+REACT_APP_FIREBASE_APP_ID=your_firebase_app_id
 ```
 
 4. Start the development server
